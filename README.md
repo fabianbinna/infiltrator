@@ -9,7 +9,7 @@ Get the executable from `target/release/infiltrator[.exe]`
 
 ## Installation
 
-Currently, there is not staging mechanism. The following files and directory structure needs to be created manually:
+Currently, there is no packaging script. The following files and directory structure needs to be created manually:
 
 ```
 - data/

@@ -21,32 +21,13 @@ use rocket::{
 
 #[macro_use] extern crate rocket;
 
-/*
-In Rust, a "prelude" refers to a set of commonly used modules and traits that are 
-automatically imported into every Rust program to provide a basic foundation for common 
-operations.
-*/
-
-/*
-TODO:
-- DONE: Download files chunked in 10MB base64
-- DONE: Reconstruct and save file
-- DONE: config
-- async requests
-- concurrency of file access
-- build script
-- docker build infra
-*/
-
 #[get("/download/<path..>?size")]
 fn download(path: PathBuf) -> Result<String, NotFound<String>> {
-    // concurrency
     let file = match File::open(Path::new("data").join(path)) {
         Ok(file) => file,
         Err(_) => return Result::Err(NotFound(String::from("Could not find file.")))
     };
 
-    // error handling?
     let file_size = file.metadata().unwrap().len();
 
     Result::Ok(format!("{file_size}"))
@@ -54,13 +35,11 @@ fn download(path: PathBuf) -> Result<String, NotFound<String>> {
 
 #[get("/download/<path..>?<part>")]
 fn download_part(config: &State<Config>, path: PathBuf, part: u64) -> Result<String, NotFound<String>> {
-    // concurrency
     let mut file = match File::open(Path::new("data").join(path)) {
         Ok(file) => file,
         Err(_) => return Result::Err(NotFound(String::from("Could not find file.")))
     };
 
-    // error handling?
     let file_size = file.metadata().unwrap().len();
     let part_size = config.part_size_bytes;
    
@@ -75,11 +54,9 @@ fn download_part(config: &State<Config>, path: PathBuf, part: u64) -> Result<Str
         end_position = file_size;
     }
 
-    // error handling?
     file.seek(SeekFrom::Start(start_position)).unwrap();
 
     let mut buffer = vec![0; (end_position - start_position) as usize];
-    // error handling?
     file.read_exact(&mut buffer).unwrap();
 
     Result::Ok(base64::engine::general_purpose::STANDARD_NO_PAD.encode(buffer))
