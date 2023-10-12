@@ -22,8 +22,8 @@ use rocket::{
 #[macro_use] extern crate rocket;
 
 #[get("/download/<path..>?size")]
-fn download(path: PathBuf) -> Result<String, NotFound<String>> {
-    let file = match File::open(Path::new("data").join(path)) {
+fn download(config: &State<Config>, path: PathBuf) -> Result<String, NotFound<String>> {
+    let file = match File::open(Path::new(config.data_path.as_str()).join(path)) {
         Ok(file) => file,
         Err(_) => return Result::Err(NotFound(String::from("Could not find file.")))
     };
@@ -35,7 +35,7 @@ fn download(path: PathBuf) -> Result<String, NotFound<String>> {
 
 #[get("/download/<path..>?<part>")]
 fn download_part(config: &State<Config>, path: PathBuf, part: u64) -> Result<String, NotFound<String>> {
-    let mut file = match File::open(Path::new("data").join(path)) {
+    let mut file = match File::open(Path::new(config.data_path.as_str()).join(path)) {
         Ok(file) => file,
         Err(_) => return Result::Err(NotFound(String::from("Could not find file.")))
     };
@@ -71,11 +71,15 @@ async fn not_found() -> Option<NamedFile> {
 #[serde(crate = "rocket::serde")]
 struct Config {
     part_size_bytes: u64,
+    data_path: String
 }
 
 impl Default for Config {
     fn default() -> Config {
-        Config {part_size_bytes: 8388608}
+        Config {
+            part_size_bytes: 8388608,
+            data_path: String::from("data/")
+        }
     }
 }
 
@@ -84,7 +88,7 @@ fn rocket() -> Rocket<Build> {
         .merge(Serialized::defaults(Config::default()))
         .merge(Toml::file("Config.toml").nested())
         .merge(Env::prefixed("INFILTRATOR_").global())
-        .select(Profile::from_env_or("INFILTRATOR_PROFILE", "release"));
+        .select(Profile::from_env_or("INFILTRATOR_PROFILE", "default"));
 
     rocket::custom(figment)
         .mount("/", FileServer::from(relative!("static")))
