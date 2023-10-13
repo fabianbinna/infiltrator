@@ -91,7 +91,7 @@ fn rocket() -> Rocket<Build> {
         .select(Profile::from_env_or("INFILTRATOR_PROFILE", "default"));
 
     rocket::custom(figment)
-        .mount("/", FileServer::from(Path::new("static")))
+        .mount("/", FileServer::from("static"))
         .mount("/", routes![download, download_part])
         .register("/", catchers![not_found])
         .attach(AdHoc::config::<Config>())
