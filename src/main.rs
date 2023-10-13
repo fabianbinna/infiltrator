@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf}
 };
 use rocket::{
-    fs::{FileServer, relative, NamedFile}, 
+    fs::{FileServer, NamedFile}, 
     figment::{
         Figment, 
         providers::{Serialized, Toml, Env, Format}, 
@@ -91,7 +91,7 @@ fn rocket() -> Rocket<Build> {
         .select(Profile::from_env_or("INFILTRATOR_PROFILE", "default"));
 
     rocket::custom(figment)
-        .mount("/", FileServer::from(relative!("static")))
+        .mount("/", FileServer::from(Path::new("static")))
         .mount("/", routes![download, download_part])
         .register("/", catchers![not_found])
         .attach(AdHoc::config::<Config>())
