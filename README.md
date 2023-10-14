@@ -1,16 +1,11 @@
 # Infiltrator
-A web server that bypasses web proxies to download files that would otherwise be blocked
-
-## Build
-
-Run `cargo build --relase`
-
-Get the executable from `target/release/infiltrator[.exe]`
+A web server that bypasses web proxies to download files that would otherwise be blocked.
 
 ## Installation
 
-Currently, there is no packaging script. The following files and directory structure needs to be created manually:
+Download a zip from Releases. Unzip and run the executable. The `data` folder needs to be created manually or set another directory in `Config.toml`. The default profile is `default`.
 
+Folder structure:
 ```
 - data/
     - [files to download]
@@ -21,8 +16,6 @@ Currently, there is no packaging script. The following files and directory struc
 - infiltrator[.exe]
 - Config.toml
 ```
-
-Edit the Config.toml to make it fit your needs.
 
 ## Usage
 

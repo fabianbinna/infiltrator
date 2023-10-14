@@ -8,6 +8,7 @@ downloadButton.onclick = function() {
         download_file(filename, file_size); //fix error handling
     } catch(error) {
         console.error("Error while getting file size:" + error);
+        alert(error);
     }
 }
 
