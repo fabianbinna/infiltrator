@@ -23,8 +23,14 @@ downloadButton.onclick = function() {
 
 uploadButton.onclick = function () {
     const file = document.getElementById("uploadFilename").files[0];
+
+    const response = httpPost("/upload/" + file.name + "/reserve");
+    if(response.status !== 201) {
+        return;
+    }
+    let uuid = response.getResponseHeader("location");
     const reader = new FileReader();
-    const part_size = 4000000;
+    const part_size = 4000;
     reader.readAsArrayBuffer(file);
     reader.onloadend = (evt) => {
         if (evt.target.readyState === FileReader.DONE) {
@@ -39,6 +45,7 @@ uploadButton.onclick = function () {
             end = part * part_size + part_size;
 
             if(start >= array.length) {
+                httpPost("/upload/" + uuid + "/commit", null);
                 return;
             }
 
@@ -50,7 +57,10 @@ uploadButton.onclick = function () {
             for (let i = 0; i < bytes.length; i += 1) {
                 binary += String.fromCharCode(bytes[i]);
             }
-            httpPost("/upload/" + file.name, btoa(binary));
+            const result = httpPost("/upload/" + uuid, btoa(binary));
+            if(result.status !== 200) {
+                return;
+            }
             part+=1;
             }
         }
