@@ -62,6 +62,14 @@ fn download_part(config: &State<Config>, path: PathBuf, part: u64) -> Result<Str
     Result::Ok(base64::engine::general_purpose::STANDARD_NO_PAD.encode(buffer))
 }
 
+#[post("/upload/<path..>", data = "<input>")]
+fn upload(config: &State<Config>, path: PathBuf, input: String) { 
+    println!("{}", input);
+    let mut file = File::create("data/text.txt").unwrap();
+    let a = base64::engine::general_purpose::STANDARD_NO_PAD.decode(input).unwrap();
+    file.write(a.as_slice());
+}
+
 #[catch(404)]
 async fn not_found() -> Option<NamedFile> {
     NamedFile::open(Path::new("static/404.html")).await.ok()
@@ -92,7 +100,7 @@ fn rocket() -> Rocket<Build> {
 
     rocket::custom(figment)
         .mount("/", FileServer::from("static"))
-        .mount("/", routes![download, download_part])
+        .mount("/", routes![download, download_part, upload])
         .register("/", catchers![not_found])
         .attach(AdHoc::config::<Config>())
 }

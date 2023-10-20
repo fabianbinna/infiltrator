@@ -1,5 +1,7 @@
 // const downloadProgress = document.getElementById("downloadProgress");
 const downloadButton = document.getElementById("downloadButton");
+const uploadButton = document.getElementById("uploadButton");
+
 downloadButton.onclick = function() {
     const filename = document.getElementById("filenameTextfield").value;
     // validate filename
@@ -16,6 +18,38 @@ downloadButton.onclick = function() {
     } catch(error) {
         alert("Error: Could not download file.");
         return;
+    }
+}
+
+uploadButton.onclick = function () {
+    const file = document.getElementById("uploadFilename").files[0];
+    const reader = new FileReader();
+    const part_size = 100;
+    reader.readAsArrayBuffer(file);
+    reader.onloadend = (evt) => {
+        if (evt.target.readyState === FileReader.DONE) {
+          const arrayBuffer = evt.target.result;
+          let array = new Uint8Array(arrayBuffer);
+          let part = 0;
+          let start = 0;
+          let end = 0;
+          while(true) {
+            console.log(part, start, end, array.length);
+            start = part * part_size;
+            end = part * part_size + part_size;
+
+            if(start >= array.length) {
+                return;
+            }
+
+            if(end > array.length) {
+                end = array.length;
+            }
+            
+            httpPost("/upload/test.txt", btoa(array.slice(start,end)));
+            part+=1;
+          }
+        }
     }
 }
 
@@ -69,5 +103,12 @@ const httpGet = (url) => {
     var xmlHttpRequest = new XMLHttpRequest();
     xmlHttpRequest.open("GET", url, false); // false for synchronous request
     xmlHttpRequest.send(null);
+    return xmlHttpRequest;
+}
+
+const httpPost = (url, data) => {
+    var xmlHttpRequest = new XMLHttpRequest();
+    xmlHttpRequest.open("POST", url, false); // false for synchronous request
+    xmlHttpRequest.send(data);
     return xmlHttpRequest;
 }
