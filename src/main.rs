@@ -74,7 +74,7 @@ fn upload(config: &State<Config>, path: PathBuf, input: String) {
         .unwrap();
 
     let a = base64::engine::general_purpose::STANDARD.decode(input).unwrap();
-    file.write(a.as_slice());
+    file.write(a.as_slice()).unwrap();
 }
 
 #[catch(404)]
