@@ -1,7 +1,7 @@
 use base64::Engine;
 use std::{
     io::{prelude::*, SeekFrom}, 
-    fs::File, 
+    fs::{File, OpenOptions}, 
     path::{Path, PathBuf}
 };
 use rocket::{
@@ -64,9 +64,16 @@ fn download_part(config: &State<Config>, path: PathBuf, part: u64) -> Result<Str
 
 #[post("/upload/<path..>", data = "<input>")]
 fn upload(config: &State<Config>, path: PathBuf, input: String) { 
-    println!("{}", input);
-    let mut file = File::create("data/text.txt").unwrap();
-    let a = base64::engine::general_purpose::STANDARD_NO_PAD.decode(input).unwrap();
+    // let mut a = File::create(Path::new(config.data_path.as_str()).join(&filepath)).unwrap();
+    // a.flush();
+    let mut file = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .create(true)
+        .open(Path::new(config.data_path.as_str()).join(path))
+        .unwrap();
+
+    let a = base64::engine::general_purpose::STANDARD.decode(input).unwrap();
     file.write(a.as_slice());
 }
 

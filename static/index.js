@@ -24,16 +24,16 @@ downloadButton.onclick = function() {
 uploadButton.onclick = function () {
     const file = document.getElementById("uploadFilename").files[0];
     const reader = new FileReader();
-    const part_size = 100;
+    const part_size = 4000000;
     reader.readAsArrayBuffer(file);
     reader.onloadend = (evt) => {
         if (evt.target.readyState === FileReader.DONE) {
-          const arrayBuffer = evt.target.result;
-          let array = new Uint8Array(arrayBuffer);
-          let part = 0;
-          let start = 0;
-          let end = 0;
-          while(true) {
+            const arrayBuffer = evt.target.result;
+            let array = new Uint8Array(arrayBuffer);
+            let part = 0;
+            let start = 0;
+            let end = 0;
+            while(true) {
             console.log(part, start, end, array.length);
             start = part * part_size;
             end = part * part_size + part_size;
@@ -45,10 +45,14 @@ uploadButton.onclick = function () {
             if(end > array.length) {
                 end = array.length;
             }
-            
-            httpPost("/upload/test.txt", btoa(array.slice(start,end)));
+            let bytes = array.slice(start,end);
+            let binary = "";
+            for (let i = 0; i < bytes.length; i += 1) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            httpPost("/upload/" + file.name, btoa(binary));
             part+=1;
-          }
+            }
         }
     }
 }
