@@ -24,13 +24,13 @@ downloadButton.onclick = function() {
 uploadButton.onclick = function () {
     const file = document.getElementById("uploadFilename").files[0];
 
-    const response = httpPost("/upload/" + file.name + "/reserve");
+    const response = httpPost("/upload/" + file.name + "/reserve?size=" + file.size);
     if(response.status !== 201) {
         return;
     }
     let uuid = response.getResponseHeader("location");
     const reader = new FileReader();
-    const part_size = 4000;
+    const part_size = 4000000;
     reader.readAsArrayBuffer(file);
     reader.onloadend = (evt) => {
         if (evt.target.readyState === FileReader.DONE) {
@@ -52,6 +52,7 @@ uploadButton.onclick = function () {
             if(end > array.length) {
                 end = array.length;
             }
+
             let bytes = array.slice(start,end);
             let binary = "";
             for (let i = 0; i < bytes.length; i += 1) {

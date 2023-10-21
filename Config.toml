@@ -5,6 +5,8 @@ log_level = "critical"
 ident = false
 part_size_bytes = 8000000
 data_path = "data/"
+max_simultaneous_uploads = 10
+max_upload_directory_size = 1000000000
 limits = { string = 8000000 }
 
 [debug]
@@ -13,6 +15,8 @@ port = 8000
 log_level = "normal"
 part_size_bytes = 8000000
 data_path = "data/"
+max_simultaneous_uploads = 10
+max_upload_directory_size = 1000000000
 limits = { string = 8000000 }
 
 [release]
@@ -22,4 +26,6 @@ log_level = "critical"
 ident = false
 part_size_bytes = 8000000
 data_path = "data/"
+max_simultaneous_uploads = 10
+max_upload_directory_size = 1000000000
 limits = { string = 8000000 }
