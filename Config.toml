@@ -3,29 +3,8 @@ address = "0.0.0.0"
 port = 8000
 log_level = "critical"
 ident = false
-part_size_bytes = 8000000
+limits = { string = "20 MiB" }
+download_part_size = "11.7 MB"
 data_path = "data/"
 max_simultaneous_uploads = 10
 max_upload_directory_size = 1000000000
-limits = { string = 8000000 }
-
-[debug]
-address = "127.0.0.1"
-port = 8000
-log_level = "normal"
-part_size_bytes = 8000000
-data_path = "data/"
-max_simultaneous_uploads = 10
-max_upload_directory_size = 1000000000
-limits = { string = 8000000 }
-
-[release]
-address = "0.0.0.0"
-port = 80
-log_level = "critical"
-ident = false
-part_size_bytes = 8000000
-data_path = "data/"
-max_simultaneous_uploads = 10
-max_upload_directory_size = 1000000000
-limits = { string = 8000000 }

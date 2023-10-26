@@ -28,9 +28,10 @@ uploadButton.onclick = function () {
     if(response.status !== 201) {
         return;
     }
-    let uuid = response.getResponseHeader("location");
+    const uuid = response.getResponseHeader("uuid");
+    const upload_part_size = Number(response.getResponseHeader("Upload-Part-Size")) * 0.75;
     const reader = new FileReader();
-    const part_size = 4000000;
+    
     reader.readAsArrayBuffer(file);
     reader.onloadend = (evt) => {
         if (evt.target.readyState === FileReader.DONE) {
@@ -41,8 +42,8 @@ uploadButton.onclick = function () {
             let end = 0;
             while(true) {
             console.log(part, start, end, array.length);
-            start = part * part_size;
-            end = part * part_size + part_size;
+            start = part * upload_part_size;
+            end = part * upload_part_size + upload_part_size;
 
             if(start >= array.length) {
                 httpPost("/upload/" + uuid + "/commit", null);

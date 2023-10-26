@@ -1,3 +1,5 @@
+mod config;
+
 use base64::Engine;
 use fs_extra::dir::get_size;
 use uuid::Uuid;
@@ -14,13 +16,13 @@ use rocket::{
         Profile
     },  
     fairing::AdHoc, 
-    serde::{Serialize, Deserialize}, 
     State, 
-    response::status::{NotFound, BadRequest, Created}, 
+    response::{status::{NotFound, BadRequest}, Responder}, 
     Rocket, 
-    Build
+    Build, Response, http::Status
 };
 
+use crate::config::Config;
 #[macro_use] extern crate rocket;
 
 #[get("/download/<path..>?size")]
@@ -43,7 +45,7 @@ fn download_part(config: &State<Config>, path: PathBuf, part: u64) -> Result<Str
     };
 
     let file_size = file.metadata().unwrap().len();
-    let part_size = config.part_size_bytes;
+    let part_size = (config.download_part_size.get_bytes() as f64 * 0.75) as u64;
    
     let start_position: u64 = part * part_size;
     let mut end_position: u64 = part * part_size + part_size;
@@ -65,7 +67,7 @@ fn download_part(config: &State<Config>, path: PathBuf, part: u64) -> Result<Str
 }
 
 #[post("/upload/<filename>/reserve?<size>")]
-fn upload_reserve(config: &State<Config>, current_uploads: &State<CurrentUploads>, filename: String, size: usize) -> Result<Created<String>, BadRequest<String>> {
+fn upload_reserve(config: &State<Config>, current_uploads: &State<CurrentUploads>, filename: String, size: usize) -> Result<ReservationResponder, BadRequest<String>> {
     let mut map: std::sync::RwLockWriteGuard<'_, HashMap<String, UploadReservation>> = current_uploads.map.write().unwrap();
 
     let filepath = Path::new(config.data_path.as_str()).join(&filename);
@@ -91,7 +93,35 @@ fn upload_reserve(config: &State<Config>, current_uploads: &State<CurrentUploads
     File::create(Path::new(config.data_path.as_str()).join(&filename)).unwrap();
     map.insert(uuid.clone(), UploadReservation::new(filename, size));
 
-    Result::Ok(Created::new(uuid.to_string()))
+    let response = ReservationResponder::new(
+        config.upload_part_size.to_string(),
+        uuid.to_string()
+    );
+
+    Ok(response)
+}
+
+struct ReservationResponder {
+    upload_part_size: String,
+    uuid: String
+}
+
+impl ReservationResponder {
+    fn new(upload_part_size: String, uuid: String) -> Self {
+        ReservationResponder { upload_part_size, uuid }
+    }
+}
+
+impl<'r> Responder<'r, 'static> for ReservationResponder {
+    fn respond_to(self, _request: &'r rocket::Request<'_>) -> rocket::response::Result<'static> {
+        let response = Response::build()
+            .status(Status::Created)
+            .raw_header("Upload-Part-Size", self.upload_part_size)
+            .raw_header("Uuid", self.uuid)
+            .finalize();
+
+        Ok(response)
+    }
 }
 
 #[post("/upload/<uuid>", data = "<input>")]
@@ -130,26 +160,6 @@ fn upload_commit(current_uploads: &State<CurrentUploads>, uuid: String) {
 #[catch(404)]
 async fn not_found() -> Option<NamedFile> {
     NamedFile::open(Path::new("static/404.html")).await.ok()
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(crate = "rocket::serde")]
-struct Config {
-    part_size_bytes: u64,
-    data_path: String,
-    max_simultaneous_uploads: usize,
-    max_upload_directory_size: usize
-}
-
-impl Default for Config {
-    fn default() -> Config {
-        Config {
-            part_size_bytes: 8388608,
-            data_path: String::from("data/"),
-            max_simultaneous_uploads: 10,
-            max_upload_directory_size: 1000000000
-        }
-    }
 }
 
 struct CurrentUploads {
@@ -226,6 +236,9 @@ fn rocket() -> Rocket<Build> {
         .register("/", catchers![not_found])
         .manage(CurrentUploads{ map: Arc::new(RwLock::new(HashMap::new())) })
         .attach(AdHoc::config::<Config>())
+        .attach(AdHoc::on_liftoff("Liftoff Printer", |_| Box::pin(async move {
+            println!("Infiltrator started")
+        })))
 }
 
 #[rocket::main]
