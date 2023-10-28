@@ -26,6 +26,7 @@ uploadButton.onclick = function () {
 
     const response = httpPost("/upload/" + file.name + "/reserve?size=" + file.size);
     if(response.status !== 201) {
+        alert("Error: File already exists.")
         return;
     }
     const uuid = response.getResponseHeader("uuid");
@@ -41,29 +42,29 @@ uploadButton.onclick = function () {
             let start = 0;
             let end = 0;
             while(true) {
-            console.log(part, start, end, array.length);
-            start = part * upload_part_size;
-            end = part * upload_part_size + upload_part_size;
+                start = part * upload_part_size;
+                end = part * upload_part_size + upload_part_size;
 
-            if(start >= array.length) {
-                httpPost("/upload/" + uuid + "/commit", null);
-                return;
-            }
+                if(start >= array.length) {
+                    httpPost("/upload/" + uuid + "/commit", null);
+                    return;
+                }
 
-            if(end > array.length) {
-                end = array.length;
-            }
+                if(end > array.length) {
+                    end = array.length;
+                }
 
-            let bytes = array.slice(start,end);
-            let binary = "";
-            for (let i = 0; i < bytes.length; i += 1) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            const result = httpPost("/upload/" + uuid, btoa(binary));
-            if(result.status !== 200) {
-                return;
-            }
-            part+=1;
+                let bytes = array.slice(start,end);
+                let binary = "";
+                for (let i = 0; i < bytes.length; i += 1) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                const result = httpPost("/upload/" + uuid, btoa(binary));
+                if(result.status !== 200) {
+                    alert("Error: Could not upload file.")
+                    return;
+                }
+                part+=1;
             }
         }
     }

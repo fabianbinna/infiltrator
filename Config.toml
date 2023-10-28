@@ -4,7 +4,8 @@ port = 8000
 log_level = "critical"
 ident = false
 limits = { string = "20 MiB" }
-download_part_size = "11.7 MB"
+download_part_size = "10 MB"
+upload_part_size = "10 MB"
 data_path = "data/"
 max_simultaneous_uploads = 10
-max_upload_directory_size = 1000000000
+max_upload_directory_size = "1 GB"

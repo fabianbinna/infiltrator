@@ -5,7 +5,7 @@ use fs_extra::dir::get_size;
 use uuid::Uuid;
 use std::{
     io::{prelude::*, SeekFrom}, 
-    fs::{File, OpenOptions}, 
+    fs::{File, OpenOptions, self}, 
     path::{Path, PathBuf}, collections::HashMap, sync::{Arc, RwLock}, time::{Instant, Duration}
 };
 use rocket::{
@@ -70,12 +70,12 @@ fn download_part(config: &State<Config>, path: PathBuf, part: u64) -> Result<Str
 fn upload_reserve(config: &State<Config>, current_uploads: &State<CurrentUploads>, filename: String, size: usize) -> Result<ReservationResponder, BadRequest<String>> {
     let mut map: std::sync::RwLockWriteGuard<'_, HashMap<String, UploadReservation>> = current_uploads.map.write().unwrap();
 
+    remove_expired_reservations(&mut map, &config.data_path);
+
     let filepath = Path::new(config.data_path.as_str()).join(&filename);
     if filepath.exists() {
         return Result::Err(BadRequest(Some(String::from("File already exists."))));
     }
-
-    remove_expired_reservations(&mut map);
 
     if map.len() >= config.max_simultaneous_uploads {
         return Result::Err(BadRequest(Some(String::from("Maximum simultaneous uploads reached."))));
@@ -85,7 +85,7 @@ fn upload_reserve(config: &State<Config>, current_uploads: &State<CurrentUploads
     let upload_size = estimated_size_total(&map);
     
     println!("dir: {}, upload: {}, file: {}, total: {}", data_dir_size, upload_size, size, (data_dir_size + upload_size + size));
-    if data_dir_size + upload_size + size >= config.max_upload_directory_size {
+    if data_dir_size + upload_size + size >= config.max_upload_directory_size.get_bytes() as usize {
         return Result::Err(BadRequest(Some(String::from("Maximum upload directory size reached."))));
     }
     
@@ -182,15 +182,21 @@ impl CurrentUploads {
     }
 }
 
-fn remove_expired_reservations(map: &mut std::sync::RwLockWriteGuard<'_, HashMap<String, UploadReservation>>) {
+fn remove_expired_reservations(
+    map: &mut std::sync::RwLockWriteGuard<'_, HashMap<String, UploadReservation>>, 
+    data_path: &String) {
     let mut to_remove = Vec::new();
+    println!("Number of reservations: {}", map.len());
     for (uuid, reservation) in map.iter() {
         if reservation.creation.elapsed() >= Duration::from_secs(600) {
             to_remove.push(uuid.to_owned());
         }
     }
     for key in to_remove.iter() {
-        map.remove(key);
+        let filename = map.remove(key).unwrap().filename;
+        println!("Remove expired reservation and delete file: {}", &filename);
+        let path = Path::new(data_path.as_str()).join(filename);
+        fs::remove_file(path).unwrap();
     }
 }
 
