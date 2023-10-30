@@ -6,9 +6,9 @@ ident = false
 part_size_bytes = 8000000
 data_path = "data/"
 
-[default.tls]
-key = "cert/key.pem"
-certs = "cert/cert.pem"
+# [default.tls]
+# key = "cert/key.pem"
+# certs = "cert/cert.pem"
 
 [debug]
 address = "127.0.0.1"
