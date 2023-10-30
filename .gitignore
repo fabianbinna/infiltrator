@@ -1,6 +1,7 @@
 debug/
 target/
 data/
+cert/
 **/*.rs.bk
 Cargo.lock
 *.pdb

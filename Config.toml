@@ -1,22 +1,18 @@
 [default]
 address = "0.0.0.0"
-port = 8000
+port = 443
 log_level = "critical"
 ident = false
 part_size_bytes = 8000000
 data_path = "data/"
+
+[default.tls]
+key = "cert/key.pem"
+certs = "cert/cert.pem"
 
 [debug]
 address = "127.0.0.1"
 port = 8000
 log_level = "normal"
-part_size_bytes = 8000000
-data_path = "data/"
-
-[release]
-address = "0.0.0.0"
-port = 80
-log_level = "critical"
-ident = false
 part_size_bytes = 8000000
 data_path = "data/"
