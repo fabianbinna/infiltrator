@@ -1,5 +1,5 @@
 # Infiltrator
-![GitHub release (with filter)](https://img.shields.io/github/v/release/fabianbinna/infiltrator)
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/fabianbinna/infiltrator/build.yml) ![GitHub release (with filter)](https://img.shields.io/github/v/release/fabianbinna/infiltrator)
 
 A web server that bypasses web proxies to download files that would otherwise be blocked.
 
